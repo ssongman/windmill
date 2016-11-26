@@ -1,0 +1,1 @@
+handler = logging.handlers.SMTPHandler(('smtp.gmail.com', 587), 'admin@host.com', ['receipt@host'], 'Mail Host', ('your_account_name', 'your_account_password'), [])
