@@ -65,9 +65,9 @@ PIXY_RCS_CENTER_POS    =  ((PIXY_RCS_MAX_POS - PIXY_RCS_MIN_POS) / 2)
 PIXY_RCS_PAN_CHANNEL   =    0
 PIXY_RCS_TILT_CHANNEL  =    1
 
-PAN_PROPORTIONAL_GAIN  =  400
+PAN_PROPORTIONAL_GAIN  =  400     # Servo Speed - pan
 PAN_DERIVATIVE_GAIN    =  300
-TILT_PROPORTIONAL_GAIN =  500
+TILT_PROPORTIONAL_GAIN =  500     # Servo Speed - tilt
 TILT_DERIVATIVE_GAIN   =  400
 
 BLOCK_BUFFER_SIZE      =    1
@@ -240,10 +240,10 @@ def pixy_pan_tilt():
 
 
 
-def pixy_auto_pilot():
+def pixy_following():
   global run_flag
 
-  print '+ Pixy Auto Piolot +'
+  print '+ Pixy Following +'
 
   # Initialize Pixy Interpreter thread #
   pixy_init_status = pixy_init()
@@ -367,7 +367,7 @@ def pixy_auto_pilot():
       if NoSearchFrameCnt > 400:   # about 5 sec
         strPixyAP.set("stop")
         stop()
-        print 'pixy_auto_pilot() exit...'
+        print 'pixy_following() exit...'
         break
 
       if count == 1:
@@ -377,24 +377,27 @@ def pixy_auto_pilot():
   
   pixy_close()
 
-#END pixy_auto_pilot()
+#END pixy_following()
 
 
 
 
 
-def pixy_auto_pilot2():
+def pixy_following2():
   global run_flag
   global run_direct
 
-  print '+ Pixy Auto Piolot2 +'
+  print '+ Pixy Following2 +'
 
   # Initialize Pixy Interpreter thread #
   pixy_init_status = pixy_init()
 
   if pixy_init_status != 0:
-    print 'Error: pixy_init() [%d] ' % pixy_init_status
+    print 'Error: pixy_init() [%d]-' % pixy_init_status
     pixy_error(pixy_init_status)
+    pixy_close_status = pixy_close()
+    print 'Error: pixy_close() [%d]-' % pixy_close_status
+    pixy_error(pixy_close_status)
     return
 
 
@@ -410,11 +413,11 @@ def pixy_auto_pilot2():
   signal.signal(signal.SIGINT, handle_SIGINT)
     
   area = 0;
-  maxArea = 7000     # max object area
-  minArea = 2000     # min object area
-  Xmin =  60         # min x position  -- center : 160 ?
-  Xmax = 300         # max x position  -- center : 160 ?
-  size = 400         # ?
+  #maxArea = 7000     # max object area
+  #minArea = 2000     # min object area
+  #Xmin =  60         # min x position  -- center : 160 ?
+  #Xmax = 300         # max x position  -- center : 160 ?
+  size = 5000         # ?
 
   # Run until we receive the INTERRUPT signal #
   while run_flag:
@@ -425,7 +428,7 @@ def pixy_auto_pilot2():
 
     # Grab a block #
     count = pixy_get_blocks(BLOCK_BUFFER_SIZE, block)
-    print '[pixy_auto_pilot2] pixy_get_blocks count[%d]' % count
+    #print '[pixy_following2] pixy_get_blocks count[%d]' % count
 
     # Was there an error? #
     if count < 0:
@@ -440,7 +443,7 @@ def pixy_auto_pilot2():
       ####################################################
       # Servo Pan tilt
       ####################################################
-      print '[pixy_auto_pilot2] Servo'
+      print '[pixy_following2] Servo'
       # Calculate the difference between Pixy's center of focus #
       # and the target.                                         #
       pan_error  = PIXY_X_CENTER - block.x
@@ -477,14 +480,14 @@ def pixy_auto_pilot2():
 	    
       # Forward speed decreases as we approach the object (size is larger)
       # speed is between -100 and 400
-      forwardSpeed = 400 - (size/256)
-      if forwardSpeed >  400: forwardSpeed =  400
+      forwardSpeed = 100 - (size/256)
+      if forwardSpeed >  100: forwardSpeed =  100
       if forwardSpeed < -100: forwardSpeed = -100
       
       # Steering differential is proportional to the error times the forward speed
       differential = (followError + (followError * forwardSpeed)) >> 8;
       
-      print '[pixy_auto_pilot2] Auto pilot2 area[%d] forwardSpeed[%d], followError[%d], differential[%d]' % (area, forwardSpeed, followError, differential)
+      print '[pixy_following2] Auto pilot2 area[%d] forwardSpeed[%d], followError[%d], differential[%d]' % (area, forwardSpeed, followError, differential)
       
       # Adjust the left and right speeds by the steering differential.
       leftSpeed  = forwardSpeed - differential
@@ -494,7 +497,13 @@ def pixy_auto_pilot2():
       if rightSpeed >  100: rightSpeed =  100
       if rightSpeed < -100: rightSpeed = -100
       
-      print '[pixy_auto_pilot2] Auto pilot3 leftSpeed[%d] rightSpeed[%d]' % ( leftSpeed, rightSpeed )
+      # when the robot reward, both speed values should be changed. -- syj. 2016.12.18
+      if leftSpeed <= 0 and rightSpeed <= 0:
+        temp = leftSpeed
+        leftSpeed = rightSpeed
+        rightSpeed = temp
+      
+      print '[pixy_following2] Auto pilot3 leftSpeed[%d] rightSpeed[%d]' % ( leftSpeed, rightSpeed )
       # And set the motor speeds
       run_direct = 'FORWARD'
       if leftSpeed >= 0:
@@ -510,7 +519,7 @@ def pixy_auto_pilot2():
       else:
         pwm_RA.ChangeDutyCycle(0)
         pwm_RB.ChangeDutyCycle(rightSpeed * -1)
-      print '[pixy_auto_pilot2] Auto pilot4'
+      print '[pixy_following2] Auto pilot4'
       
       NoSearchFrameCnt = 0
     else:
@@ -526,10 +535,10 @@ def pixy_auto_pilot2():
     if (frame_index % 50) == 0:
       # If available, display block data once a second #
       print 'frame [%d], NoSearchFrameCnt[%d]' % (frame_index, NoSearchFrameCnt)
-      if NoSearchFrameCnt > 400:   # about 5 sec
+      if NoSearchFrameCnt > 300:   # about 5 sec
         strPixyAP2.set("stop")
         stop()
-        print 'pixy_auto_pilot() exit...'
+        print 'pixy_following() exit...'
         break
 
       if count == 1:
@@ -539,7 +548,7 @@ def pixy_auto_pilot2():
   
   pixy_close()
 
-#END pixy_auto_pilot2()
+#END pixy_following2()
 
 
 
@@ -548,56 +557,56 @@ def pixy_auto_pilot2():
 
 
 
-####################################################################################################
-# PCA9685 setting, Servo
-####################################################################################################
-
-#Import the PCA9685 module.
-pwm = Adafruit_PCA9685.PCA9685()
-
-# Set frequency to 100 hz, good for servos.
-pwm.set_pwm_freq(100)      # between 40hz and 1000hz
-
-#led_gpio_pin = 18
-PANS_PCA_PIN = 0
-TILT_PCA_PIN = 3
-
-# Configure min and max servo pulse lengths
-SPAN_PULSE_MIN =  650  # Min pulse length out of 4096
-SPAN_PULSE_MAX = 1000  # Max pulse length out of 4096
-TILT_PULSE_MIN =  400  # Min pulse length out of 4096
-TILT_PULSE_MAX = 1000  # Max pulse length out of 4096
-
-MOVING_PULSE = 50
-
-#MID_PULSE_PANS = (SPAN_PULSE_MIN + SPAN_PULSE_MAX) / 2
-#MID_PULSE_TILT = (TILT_PULSE_MIN + TILT_PULSE_MAX) / 2
-MID_PULSE_PANS = 850
-MID_PULSE_TILT = 800
-
-CurPulse_pans = MID_PULSE_PANS
-CurPulse_tilt = MID_PULSE_TILT
+#  ####################################################################################################
+#  # PCA9685 setting, Servo
+#  ####################################################################################################
+#  
+#  #Import the PCA9685 module.
+#  pwm = Adafruit_PCA9685.PCA9685()
+#  
+#  # Set frequency to 100 hz, good for servos.
+#  pwm.set_pwm_freq(100)      # between 40hz and 1000hz
+#  
+#  #led_gpio_pin = 18
+#  PANS_PCA_PIN = 0
+#  TILT_PCA_PIN = 3
+#  
+#  # Configure min and max servo pulse lengths
+#  SPAN_PULSE_MIN =  650  # Min pulse length out of 4096
+#  SPAN_PULSE_MAX = 1000  # Max pulse length out of 4096
+#  TILT_PULSE_MIN =  400  # Min pulse length out of 4096
+#  TILT_PULSE_MAX = 1000  # Max pulse length out of 4096
+#  
+#  MOVING_PULSE = 50
+#  
+#  #MID_PULSE_PANS = (SPAN_PULSE_MIN + SPAN_PULSE_MAX) / 2
+#  #MID_PULSE_TILT = (TILT_PULSE_MIN + TILT_PULSE_MAX) / 2
+#  MID_PULSE_PANS = 850
+#  MID_PULSE_TILT = 800
+#  
+#  CurPulse_pans = MID_PULSE_PANS
+#  CurPulse_tilt = MID_PULSE_TILT
 
 
 def AngleUp(event):
     global CurPulse_tilt, CurPulse_pans
     CurPulse_tilt -= MOVING_PULSE
     if CurPulse_tilt < TILT_PULSE_MIN: CurPulse_tilt = TILT_PULSE_MIN
-    pwm.set_pwm(TILT_PCA_PIN, 0, CurPulse_tilt)
+#    pwm.set_pwm(TILT_PCA_PIN, 0, CurPulse_tilt)
     print 'Key: ', event.char, ', angle(pan,tilt) : ', CurPulse_pans, CurPulse_tilt
 
 def AngleDown(event):
     global CurPulse_tilt, CurPulse_pans
     CurPulse_tilt += MOVING_PULSE
     if CurPulse_tilt > TILT_PULSE_MAX: CurPulse_tilt = TILT_PULSE_MAX
-    pwm.set_pwm(TILT_PCA_PIN, 0, CurPulse_tilt)
+#    pwm.set_pwm(TILT_PCA_PIN, 0, CurPulse_tilt)
     print 'Key: ', event.char, ', angle(pan,tilt) : ', CurPulse_pans, CurPulse_tilt
 
 def AngleLeft(event):
     global CurPulse_tilt, CurPulse_pans
     CurPulse_pans += MOVING_PULSE
     if CurPulse_pans > SPAN_PULSE_MAX: CurPulse_pans = SPAN_PULSE_MAX
-    pwm.set_pwm(PANS_PCA_PIN, 0, CurPulse_pans)
+#    pwm.set_pwm(PANS_PCA_PIN, 0, CurPulse_pans)
     print 'Key: ', event.char, ', angle(pan,tilt) : ', CurPulse_pans, CurPulse_tilt
     
     #set_position_result = pixy_rcs_set_position(PIXY_RCS_PAN_CHANNEL, pan_gimbal.position)
@@ -606,15 +615,15 @@ def AngleRight(event):
     global CurPulse_tilt, CurPulse_pans
     CurPulse_pans -= MOVING_PULSE
     if CurPulse_pans < SPAN_PULSE_MIN: CurPulse_pans = SPAN_PULSE_MIN
-    pwm.set_pwm(PANS_PCA_PIN, 0, CurPulse_pans)
+#    pwm.set_pwm(PANS_PCA_PIN, 0, CurPulse_pans)
     print 'Key: ', event.char, ', angle(pan,tilt) : ', CurPulse_pans, CurPulse_tilt
 
 def AngleCenter(event):
     global CurPulse_tilt, CurPulse_pans
     CurPulse_pans = MID_PULSE_PANS
     CurPulse_tilt = MID_PULSE_TILT
-    pwm.set_pwm(PANS_PCA_PIN, 0, CurPulse_pans)
-    pwm.set_pwm(TILT_PCA_PIN, 0, CurPulse_tilt)
+#    pwm.set_pwm(PANS_PCA_PIN, 0, CurPulse_pans)
+#    pwm.set_pwm(TILT_PCA_PIN, 0, CurPulse_tilt)
     print 'Key: ', event.char, ', angle(pan,tilt) : ', CurPulse_pans, CurPulse_tilt
 
 
@@ -997,7 +1006,7 @@ label = Label(frmSpeed, text='Speed:', fg='red')  # Create a label
 label.pack()
 
 speed_scale = Scale(frmSpeed, length=300, width=20, from_=0, to=100, orient=HORIZONTAL, tickinterval=20, command=changeSpeed)  # Create a scale  # , sliderlength=10
-speed_scale.set(100)
+speed_scale.set(70)
 #speed.grid(row=3, column=1)
 speed_scale.pack()
 
@@ -1143,9 +1152,9 @@ lbDis      = Label (frmUltraSonicBtn, text='Distance : 9999cm' , fg="red"  , fon
 lbDir      = Label (frmUltraSonicBtn, text='Dircection : MID' , fg="red"  , font=20, justify=LEFT, bd=3, textvariable=strDir)
 btnPixyPT  = Button(frmUltraSonicBtn, text="PIXY pan tilt"    , fg="black", bd=3, height=2, width=15, command=pixy_pan_tilt)
 lbPixyPT   = Label (frmUltraSonicBtn, text=''                 , fg="red"  , font=20, justify=LEFT, bd=3, textvariable=strPixyPT )
-btnPixyAP  = Button(frmUltraSonicBtn, text="PIXY auto pilot"  , fg="black", bd=3, height=2, width=15, command=pixy_auto_pilot)
+btnPixyFL  = Button(frmUltraSonicBtn, text="PIXY following"   , fg="black", bd=3, height=2, width=15, command=pixy_following)
 lbPixyAP   = Label (frmUltraSonicBtn, text=''                 , fg="red"  , font=20, justify=LEFT, bd=3, textvariable=strPixyAP )
-btnPixyAP2 = Button(frmUltraSonicBtn, text="PIXY auto pilot2" , fg="black", bd=3, height=2, width=15, command=pixy_auto_pilot2)
+btnPixyFL2 = Button(frmUltraSonicBtn, text="PIXY following2"  , fg="black", bd=3, height=2, width=15, command=pixy_following2)
 lbPixyAP2  = Label (frmUltraSonicBtn, text=''                 , fg="red"  , font=20, justify=LEFT, bd=3, textvariable=strPixyAP2 )
 #btnRadar  = Button(frmUltraSonicBtn, text="Radar"            , fg="black", bd=3, height=2, width=15, command=RadarWin)
 #lbRadar   = Label (frmUltraSonicBtn, text=''                 , fg="red"  , font=20, justify=LEFT, bd=3)
@@ -1162,9 +1171,9 @@ lbDis     .grid(row=2, column=1) #, sticky='W')
 lbDir     .grid(row=3, column=1) #, sticky='W')
 btnPixyPT .grid(row=4, column=0) #, sticky='W')
 lbPixyPT  .grid(row=4, column=1) #, sticky='W')
-btnPixyAP .grid(row=5, column=0) #, sticky='W')
+btnPixyFL .grid(row=5, column=0) #, sticky='W')
 lbPixyAP  .grid(row=5, column=1) #, sticky='W')
-btnPixyAP2.grid(row=6, column=0) #, sticky='W')
+btnPixyFL2.grid(row=6, column=0) #, sticky='W')
 lbPixyAP2 .grid(row=6, column=1) #, sticky='W')
 #btnRadar .grid(row=4, column=0) #, sticky='W')
 #lbRadar  .grid(row=4, column=1) #, sticky='W')
