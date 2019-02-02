@@ -2,7 +2,7 @@
 #
 # File name  : ex611_Tkinter_basic.py
 # Executeoin : python3 ex611_Tkinter_basic.py
-# Description : blescan
+# Description : 
 #
 ###################################################
 
