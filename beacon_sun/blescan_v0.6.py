@@ -11,10 +11,12 @@
 #########[python 2.x]###########
 from Tkinter import *
 import Queue
+from ttk import Progressbar
 
 #########[python 3.x]###########
 #from tkinter import *
 #import queue
+#from tkinter.ttk import Progressbar
 
 
 #########[BLE]###########
@@ -26,7 +28,6 @@ import bluetooth._bluetooth as bluez
 #########[ETC]###########
 from threading import Thread
 import time
-
 
 
 class App:
@@ -49,6 +50,8 @@ class App:
       self.dAftQueue        = DoubleVar();   self.dAftQueue      .set(0)       #
       self.dAftAverDis      = DoubleVar();   self.dAftAverDis    .set(0)       #
       self.intResultRange   = IntVar()   ;   self.intResultRange .set(3)       # 1:inner, 2: Outer,  3: no signal
+      self.strResultOut     = StringVar();   self.strResultOut   .set("")
+      
 
       self.q = Queue.Queue()
       #self.q = Queue.PriorityQueue()
@@ -135,10 +138,11 @@ class App:
       Radiobutton(frmMeasuer, text="inner range" , value= 1, variable=self.intResultRange).grid(row=22, column=1)
       Radiobutton(frmMeasuer, text="out of range", value= 2, variable=self.intResultRange).grid(row=22, column=2)
       Radiobutton(frmMeasuer, text="no signal"   , value= 3, variable=self.intResultRange).grid(row=22, column=3)
+      Label(frmMeasuer, text='Out of range', font=30, fg='red', textvariable=self.strResultOut,).grid(row=22, column=4, columnspan=3)
 
 
       ##############################################################
-      #[Measure Frame]
+      #[Measure Log Frame]
       ##############################################################
       frmLog = Frame(master, border=2)
       frmLog .grid(row=2, column=0, sticky='W')
@@ -149,8 +153,7 @@ class App:
 
       Label(frmLog, text=" ", bd=2).grid(row=0, column=1, columnspan=5, sticky=W)
       Label(frmLog, text='[Measure Log]', fg='black', font=20).grid(row=3, column=0, sticky='W', columnspan=2)
-      Label(frmLog, text='Drive Mode : Menual', font=30, fg='red', textvariable=self.strModetxt  ).grid(row=4, column=0, columnspan=2)
-      Label(frmLog, text='Direction: forward' , font=10, fg='red', textvariable=self.strDirection).grid(row=5, column=0, columnspan=2)
+      Label(frmLog, text='Measure Mode', font=30, fg='red', textvariable=self.strModetxt  ).grid(row=4, column=0, columnspan=2)
 
 
 
@@ -267,8 +270,10 @@ class App:
                       ## Check Limit Range and Result Range
                       if (self.dAftAverDis.get() <= self.intLimitRange.get()):
                           self.intResultRange.set(1)
+                          self.strResultOut.set("")
                       else:
                           self.intResultRange.set(2)
+                          self.strResultOut.set("Out of range")
 
                   # end if - tolerance pass
               # end if
@@ -276,6 +281,7 @@ class App:
       # end while
 
       self.intResultRange.set(3)   # no signal
+      self.strResultOut.set("")
       while (self.q.qsize() > 0):  # queue remove
           self.q.get()
           self.dAftQueue.set(self.q.queue)
