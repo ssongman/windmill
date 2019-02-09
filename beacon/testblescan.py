@@ -8,9 +8,9 @@ import bluetooth._bluetooth as bluez
 dev_id = 0
 try:
     sock = bluez.hci_open_dev(dev_id)
-    print "ble thread started"
+    print ("ble thread started")
 except:
-    print "error accessing bluetooth device..."
+    print ("error accessing bluetooth device...")
     sys.exit(1)
 
 
@@ -19,12 +19,12 @@ blescan.hci_enable_le_scan(sock)
 
 while True:
     returnedList = blescan.parse_events(sock, 10)
-    print "----------"
+    print ("----------")
     for beacon in returnedList:
         lt_be = beacon.split(',')
         #print lt_be
         if lt_be[2] == '501':   # major
-            print beacon
+            print (beacon)
     
 
 '''
