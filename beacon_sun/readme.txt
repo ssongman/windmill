@@ -2,7 +2,9 @@
 
 
 1. execution 
-1) sudo python blescan_v1.0.py
+1) one of below 
+   sudo python blescan_v1.0.py     <-- local terminal
+   gksudo python blescan_v1.0.py   <-- external terminal
 2) Click the button : Measurement Start 
 
 

@@ -1,7 +1,11 @@
 ###################################################
 #
 # File name   : blescan_v1.0.py
-# Execution   : python blescan_v1.0.py
+# Execution   :
+#               cd /home/pi/song/windmill/beacon_sun
+#               python blescan_v1.0.py
+#               sudo python blescan_v1.0.py
+#
 # Description :
 #         v0.5: GUI Setting
 #         v0.6: add BLE Setting
@@ -52,7 +56,7 @@ class App:
       self.dAftAverDis      = DoubleVar();   self.dAftAverDis    .set(0)       #
       self.intResultRange   = IntVar()   ;   self.intResultRange .set(3)       # 1:inner, 2: Outer,  3: no signal
       self.strResultOut     = StringVar();   self.strResultOut   .set("")
-      
+
 
       self.q = Queue.Queue()
       #self.q = Queue.PriorityQueue()
@@ -191,12 +195,13 @@ class App:
       strBleUUID  =     self.strBleUUID.get()
       strBleMajor = str(self.intBleMajor.get())
       strBleMinor = str(self.intBleMinor.get())
-      print("strBleUUID : ", strBleUUID )
-      print("strBleMajor: ", strBleMajor)
-      print("strBleMajor: ", strBleMajor)
-      print("strBleMinor: ", strBleMinor)
 
       if (MeasureMode == 1):
+          print("strBleUUID : ", strBleUUID )
+          print("strBleMajor: ", strBleMajor)
+          print("strBleMajor: ", strBleMajor)
+          print("strBleMinor: ", strBleMinor)
+
           self.dev_id = 0
           try:
               sock = bluez.hci_open_dev(self.dev_id)
