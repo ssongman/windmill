@@ -18,8 +18,8 @@ blescan.hci_le_set_scan_parameters(sock)
 blescan.hci_enable_le_scan(sock)
 
 while True:
-    returnedList = blescan.parse_events(sock, 10)
-    print ("----------")
+    returnedList = blescan.parse_events(sock, 1)
+    print ("[Main while]----------")
     for beacon in returnedList:
         lt_be = beacon.split(',')
         #print lt_be
@@ -51,4 +51,5 @@ c9:51:05:49:72:d7,030366660319d007020a0509ffee03d7,29257,1361,-55,-79
 d5:99:f7:ad:35:57,24ddf4118cf1440c87cde368daf9c93e,501,20782,-71,-56
 c9:51:05:49:72:d7,030366660319d007020a0509ffee03d7,29257,1361,-55,-77
 c9:51:05:49:72:d7,030366660319d007020a0509ffee03d7,29257,1361,-55,-89
+
 '''

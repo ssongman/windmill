@@ -5,6 +5,7 @@
 #               cd /home/pi/song/windmill/beacon_sun
 #               python blescan_v1.0.py
 #               sudo python blescan_v1.0.py
+#               gksudo python blescan_v1.0.py
 #
 # Description :
 #         v0.5: GUI Setting
@@ -215,7 +216,7 @@ class App:
 
       while (MeasureMode == 1):
           time.sleep(self.dMeasureFreq.get())
-          returnedList = blescan.parse_events(sock, 10)
+          returnedList = blescan.parse_events(sock, 1)
           print ("----------")
           for beacon in returnedList:
               split_beacon = beacon.split(',')
